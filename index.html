@@ -1,4 +1,6 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8">
+<!DOCTYPE html>
+
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Block World</title>
     <style>
@@ -79,7 +81,7 @@
 <base target="_self">
 
 
-    </head><body><div id="info">
+    <div id="info">
         WASD: Move | SPACE: Jump | Left Click: Mine | Right Click: Place | 1-5: Select Block
     </div>
     <div id="hotbar"></div>
@@ -343,10 +345,28 @@
             const moveX = (keyState.KeyD ? 1 : 0) + (keyState.KeyA ? -1 : 0);
             const moveZ = (keyState.KeyW ? 1 : 0) + (keyState.KeyS ? -1 : 0);
             
-            playerDirection.set(moveX, 0, moveZ).normalize();
+            // Get camera direction
+            const cameraDirection = new THREE.Vector3();
+            camera.getWorldDirection(cameraDirection);
+            cameraDirection.y = 0; // Keep movement on xz plane
+            cameraDirection.normalize();
             
-            // Apply movement
+            // Get right vector - FIXED HERE
+            const rightVector = new THREE.Vector3();
+            // Invert the right vector by swapping the cross product order
+            rightVector.crossVectors(cameraDirection, camera.up).normalize();
+            
+            // Calculate movement direction relative to camera
+            playerDirection.set(0, 0, 0);
+            if (moveZ) {
+                playerDirection.add(cameraDirection.clone().multiplyScalar(moveZ));
+            }
+            if (moveX) {
+                playerDirection.add(rightVector.clone().multiplyScalar(moveX));
+            }
+            
             if (playerDirection.length() > 0) {
+                playerDirection.normalize();
                 playerVelocity.x = playerDirection.x * speed;
                 playerVelocity.z = playerDirection.z * speed;
             } else {
@@ -354,6 +374,7 @@
                 playerVelocity.z = 0;
             }
             
+            // Rest of the function remains the same...
             // Jumping
             if (keyState.Space && playerOnGround) {
                 playerVelocity.y = 8;
@@ -362,6 +383,7 @@
             
             // Gravity
             playerVelocity.y -= 20 * delta;
+            
             
             // Collision detection
             const playerPos = controls.getObject().position.clone();
@@ -474,4 +496,3 @@
                 
           
               
-</body></html>
